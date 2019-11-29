@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Nestoria_API</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<link rel="stylesheet" href="style.css"/>
+	<script src="https://kit.fontawesome.com/ce6bd7e1f3.js" crossorigin="anonymous"></script>
+</head>
+<body>
+	<div class='wrapper'>
+		<header class="header">
+			<div class="container">
+				<span>
+					<img src="image/nestoria-property_36813.png" alt="Nestoria logo" class="logo">
+					<em>Nestoria</em>
+				</span>
+				<div>
+					<input type="text" id="inputSearch"/><button id="btnSearch">Search</button>
+				</div>
+				<i class="fas fa-heart" id="heartFavorite"></i>
+			</div>
+		</header>
+		<section class="main"></section>
+		<footer class="footer">
+			<p>
+				Thanks for choosing us!
+				<a href="https://www.nestoria.co.uk"><img src="https://resources.nestimg.com/nestoria/img/pbr_v1.png" alt="powered by nestoria.co.uk" width="200" height="22" style="border:0; padding:0px;" /></a>				
+			</p>
+		</footer>
+	</div>
+  <div class="modal-overlay modal_closed" id="modal-overlay"></div>
+  <div class="modal modal_closed" id="modal"></div>
+  <div class="modalLitle modal_closed" id="modalLitle"></div>
+	<script src='index.js'></script>
+	<script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
+</body>
+</html>
