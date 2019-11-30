@@ -18,10 +18,14 @@ body {
 	background: #ccc;
 }
 .header{
+	position: fixed;
 	min-height: 50px;
+	width: 100%	;
+	max-width: 960px;
 	margin: -10px;
-	padding: 10px;
+	padding: 10px 0;
 	background: #c1f2c3;
+	z-index: 10;
 }
 .header .container{
 	display: flex;
@@ -53,7 +57,7 @@ body {
 }
 .main{
 	min-height: 450px;
-	margin: 20px 0;
+	margin: 70px 0 20px 0;
 }
 .footer{
 	margin: -10px;
@@ -184,6 +188,7 @@ body {
     z-index: 100;
     left: 50%;
     top: 50%;
+    overflow: auto;
     border-radius: 10px;
     transform: translate(-50%, -50%);
     background: white;
