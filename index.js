@@ -1,21 +1,24 @@
 (function(){
-	let locationSearch, numberPage, arrayListings, favoriteList;
+	let locationSearch; 
+	let numberPage; 
+	let arrayListings; 
+	let favoriteList;
 
 	function init() {
 		locationSearch = null;
 		numberPage = null;
 		arrayListings = [];
-		favoriteList = {};
+		favoriteList = [];
 
 		document.getElementById("modal-overlay").addEventListener("click",closeModal);
 		document.getElementById("btnSearch").addEventListener("click",hendlerSearch);
 		document.getElementById("heartFavorite").addEventListener("click", hendlerHeart);
 		document.getElementById("modal").addEventListener("click", hendlerClickModal);
 
-		if(window.localStorage.getItem("favorite")) {
-			favoriteList = JSON.parse(window.localStorage.getItem("favorite"))
-		}else{
-			window.localStorage.setItem("favorite", JSON.stringify(favoriteList))
+		if (window.localStorage.getItem("favorite")) {
+			favoriteList = JSON.parse(window.localStorage.getItem("favorite"));
+		} else {
+			window.localStorage.setItem("favorite", JSON.stringify(favoriteList));
 		}
 	}
 
@@ -33,27 +36,27 @@
 
 	function openLitleModal(str) {
 		openModal("modalLitle");
-		document.getElementById("modalLitle").innerHTML = `<p class="messageLitleModal">${str}<p>`
+		document.getElementById("modalLitle").innerHTML = `<p class="messageLitleModal">${str}<p>`;
 	}
 
 	function openModalFavorite() {
 		let favorite = JSON.parse(window.localStorage.getItem("favorite"));
 		
-		if(isEmptyObject(favorite)) {
+		if (isEmptyObject(favorite)) {
 			document.getElementById("modal").innerHTML = `<p class="messageEmptyFavorite">The list of favorite ads is empty. 
 			Click on the heart to add an ad to your favorites.<p>`;
 			return;
 		}
 		
 		document.getElementById("modal").innerHTML = "";
-		for (let key in favorite) {
-			createListing(favorite[key], ".modal");
+		for (let item of favorite) {
+			createListing(item, "#modal");
 		}
 	}
 
 	function createListing(listing, selector) {
 		let url = listing.lister_url;
-		let classHeart = (url in favoriteList) ? "fas" : "far";
+		let classHeart = findItem(favoriteList, url) ? "fas" : "far";
 		let strContent = `
 		<div class="listing" data-url=${listing.lister_url}>
 			<figure class="thumb">
@@ -70,21 +73,31 @@
 					<span class="highlight">${listing.price_formatted}pm</span>
 				</p>
 			</div>		
-		</div>`
+		</div>`;
 		document.querySelector(selector).insertAdjacentHTML("beforeend", strContent);
 	}
 
 	function createModalListing(url, container) {
-		let listing = (container === ".containerMain") ? arrayListings.find(item => item.lister_url === url) : favoriteList[url];
-
+		let strBedroom;
+		let strBathroom;
+		let listing = (container === "#containerMain") ? findItem(arrayListings, url) : findItem(favoriteList, url);
 		let separator = " &#183 ";
-		let classHeart = (url in favoriteList) ? "fas" : "far";
+		let classHeart = findItem(favoriteList, url) ? "fas" : "far";
 		let strKeywords = separator + listing.keywords.split(", ").join(separator);
 		let strSize = !listing.size ? "" : separator + listing.size + " sq.ft";
-		let strBedroom = !listing.bedroom_number ? "" : listing.bedroom_number === 1 
-		? separator + listing.bedroom_number + " Bedroom" : separator + listing.bedroom_number + " Bedrooms";
-		let strBathroom = !listing.bathroom_number ? "" : listing.bathroom_number === 1 
-		? separator + listing.bathroom_number + " Bath" : separator + listing.bathroom_number + " Baths";
+
+		if (!listing.bedroom_number) {
+			strBedroom = "";
+		}
+		const bedroomTitle = listing.bedroom_number === 1 ? " Bedroom " : " Bedrooms";
+		strBedroom = `${separator} ${listing.bedroom_number} ${bedroomTitle}`;
+
+		if (!listing.bathroom_number) {
+			strBathroom = "";
+		}
+		const bathroomTitle = listing.bathroom_number === 1 ? " Bath" : " Baths";
+		strBathroom = `${separator} ${listing.bathroom_number} ${bathroomTitle}`;
+		
 		let strContent = `
 			<div class="listingModal">
 				<div class="photo">
@@ -112,47 +125,50 @@
 	}
 
 	function createListListings(response) {
-		if(numberPage === 1) {
-			document.querySelector(".main").innerHTML = `
-				<div class="containerMain"></div>
-				<div class="btnLoad">
+		if (numberPage === 1) {
+			document.querySelector("#main").innerHTML = `
+				<div class="containerMain" id="containerMain"></div>
+				<div class="btnLoad" id="btnLoad">
 					<button>Load more...</button>
 				</div>
 			`;
-			document.querySelector(".btnLoad").addEventListener("click", loadListings);
-			document.querySelector(".containerMain").addEventListener("click", checkTarget);
+			document.querySelector("#btnLoad").addEventListener("click", loadListings);
+			document.querySelector("#containerMain").addEventListener("click", checkTarget);
 		}
 
 		let listings = response.response.listings;
-		for(let listing of listings){
-			createListing(listing, ".containerMain");
+		for (let listing of listings){
+			createListing(listing, "#containerMain");
 		}
 	}
 
-	function changeHeart(heart, url) {
-		if(heart.getAttribute("class").includes("far")) {
-			heart.classList.remove("far");
-			heart.classList.add("fas");
-			saveToFavorites(url);
-		}else{
-			heart.classList.remove("fas");
-			heart.classList.add("far");
+	function changeHeart(target) {
+		let url = target.dataset.url;
+
+		if (findItem(favoriteList, url)) {
+			target.classList.remove("fas");
+			target.classList.add("far");
 			removeFromFavorites(url);
+		} else {
+			target.classList.remove("far");
+			target.classList.add("fas");
+			saveToFavorites(url)
 		}
 	}
 
 	function hendlerSearch() {
-		locationSearch = document.getElementById("inputSearch").value;
+		let location = document.getElementById("inputSearch").value;
 		
-		if(locationSearch === ""){
+		if (location === "") {
 			openLitleModal("Search fields are empty! Please enter a place to search!");
 			return;
 		}
-
+		
+		locationSearch = location;
 		numberPage = 1;
 		arrayListings = [];
 		document.getElementById("inputSearch").value = "";
-		document.querySelector(".main").innerHTML = "";
+		document.querySelector("#main").innerHTML = "";
 
 		findLocation(locationSearch, numberPage);	
 	}
@@ -165,26 +181,30 @@
 
 	function hendlerClickModal(e) {
 	  e.preventDefault();
-	  if(e.target.tagName === "H3") {
-	  	let url = e.target.parentElement.parentElement.parentElement.dataset.url;;
+	  if (e.target.tagName === "H3") {
+	  	let url = e.target.parentElement.parentElement.parentElement.dataset.url;
 			createModalListing(url);
 	  }
-	  if(e.target.className.includes("fa-heart")) {
-			let heart = e.target;
-			let url = heart.dataset.url;
 
-			changeHeart(heart,url);
-
-			if(heart.id !== "heartFullInfo") {
-				openModalFavorite()
+	  if (e.target.className.includes("fa-heart")) {
+			changeHeart(e.target);
+			if (e.target.id !== "heartFullInfo") {
+				openModalFavorite();
 			};
 			
-			let heartList = document.querySelector(".containerMain");
-			if(heartList) {
+			let heartList = document.querySelector("#containerMain");
+			let url = e.target.dataset.url;
+			if (heartList) {
 				let arrListing = heartList.querySelectorAll(".fa-heart");
 				for (let item of arrListing) {
-					if(item.dataset.url === url) {
-						changeHeart(item, url);
+					if (item.dataset.url === url) {
+						if (findItem(favoriteList, url)) {
+							item.classList.remove("far");
+							item.classList.add("fas");
+						} else {
+							item.classList.remove("fas");
+							item.classList.add("far");
+						}
 					}
 				}
 			}
@@ -202,7 +222,7 @@
 	function checkResponse(response) {
 		let codeResponse = response.response.application_response_code;
 		let textResponse = response.response.application_response_text;
-		if(codeResponse < 100 || codeResponse > 199) {
+		if (codeResponse < 100 || codeResponse > 199) {
 			checkCodeError(codeResponse, textResponse);
 			return;
 		}
@@ -215,7 +235,7 @@
 	function checkCodeError(code, text) {
 		let codes = ["200", "201", "202", "210", "500", "900", "901", "902", "910", "911"];
 
-		if(codes.includes(code)) {
+		if (codes.includes(code)) {
 			openLitleModal(text[0].toUpperCase() + text.slice(1));
 			return;
 		}		
@@ -223,17 +243,15 @@
 		openLitleModal("Error loading data. Check the entered data and repeat the search.");
 	}
 
-	function checkTarget(e){
+	function checkTarget(e) {
 	  e.preventDefault();
-    if(e.target.tagName === "H3") {
-    	let url = e.target.parentElement.parentElement.parentElement.dataset.url;;
+    if (e.target.tagName === "H3") {
+    	let url = e.target.parentElement.parentElement.parentElement.dataset.url;
     	openModal("modal");
-  		createModalListing(url, ".containerMain");
+  		createModalListing(url, "#containerMain");
     }
-    if(e.target.className.includes("fa-heart")) {
-    	let heart = e.target;
-			let url = heart.dataset.url;
-			changeHeart(heart, url);
+    if (e.target.className.includes("fa-heart")) {
+			changeHeart(e.target);
     }
 	}
 
@@ -243,14 +261,24 @@
 	}
 
 	function saveToFavorites(url) {
-		favoriteList[url] = arrayListings.find(item => item.lister_url === url);
+		favoriteList.push(findItem(arrayListings, url));
 		window.localStorage.setItem("favorite", JSON.stringify(favoriteList));
-	};
+	}
 
 	function removeFromFavorites(url) {
-		delete favoriteList[url];
+		let indexRemove;
+		favoriteList.forEach((item, index) => {
+			if (item['lister_url'] === url) {
+				favoriteList.splice(index, 1)
+			}
+		})
+
 		window.localStorage.setItem("favorite", JSON.stringify(favoriteList));
-	};
+	}
+
+	function findItem(arr, itemUrl) {
+		return arr.find(item => item.lister_url === itemUrl);
+	}
 
 	function isEmptyObject(obj) {
 	  for (let i in obj) {
